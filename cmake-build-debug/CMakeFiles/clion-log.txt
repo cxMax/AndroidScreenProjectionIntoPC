@@ -1,8 +1,0 @@
-/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /Users/caixi/code/CLionProjects/AppRemote
-CMake Error at CMakeLists.txt:14 (target_link_libraries):
-  Cannot specify link libraries for target "APPREMOTE" which is not built by
-  this project.
-
-
--- Configuring incomplete, errors occurred!
-See also "/Users/caixi/code/CLionProjects/AppRemote/cmake-build-debug/CMakeFiles/CMakeOutput.log".
