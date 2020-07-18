@@ -29,6 +29,7 @@ public:
     AVPacket *packet;
 
     SDL_bool request_stop;
+    Size latestSize;
 
     FFmpegDecoder(SocketConnection *connection);
 
@@ -37,6 +38,7 @@ public:
     SDL_bool init();
 
     SDL_bool async_start();
+    SDL_bool resize(Size nSize);
 
     void _decode_loop();
 

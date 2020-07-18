@@ -41,6 +41,7 @@ int main() {
     decoder->async_start();
 
     EventController *controller = new EventController(screen, socketConnection);
+    controller->decoder = decoder;
     controller->init();
     controller->async_start();
 

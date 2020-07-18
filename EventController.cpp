@@ -266,6 +266,40 @@ void EventController::event_handle() {
         } else if (event.type == SDL_MOUSEWHEEL) {
             //处理滑动事件
             handleScrollEvent(screen, &event.wheel);
+        } else if (event.type == SDL_WINDOWEVENT){
+            // printf("wtf event type %x\n", event.window.event);
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                int nWidth = event.window.data1;
+                int nHeight = event.window.data2;
+                printf("wtf resize event type w=%d h=%d\n", nWidth, nHeight);
+
+                Size size = {
+                        nWidth & ~7,
+                        nHeight & ~7,
+                };
+
+                char buf[6];
+                memset(buf, 0, sizeof(buf));
+                buf[0] = 0;
+                buf[1] = 4;
+
+                buf[2] = size.width >> 8;
+                buf[3] = size.width & 0xFF;
+
+                buf[4] = size.height >> 8;
+                buf[5] = size.height & 0xFF;
+                // int result = connection->send_to_(reinterpret_cast<uint8_t *>(buf), 4);
+                int result = connection->send_to_(reinterpret_cast<u_int8_t *>(buf), 6);
+                printf("send resize result = %d, w=%d, h=%d\n", result, size.width, size.height);
+                // decoder->stop();
+                // decoder->destroy();
+                decoder->resize(size);
+                // decoder->latestSize = { size };
+                // decoder->updateContext(size);
+
+                printf("updated ? resize result = %d, w=%d, h=%d\n", result, decoder->latestSize.width, decoder->latestSize.height);
+                // decoder->async_start();
+            }
         }
     }
 

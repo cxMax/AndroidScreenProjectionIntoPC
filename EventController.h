@@ -10,12 +10,14 @@
 #include "SDL2/SDL_thread.h"
 #include "SDL_Screen.h"
 #include "SocketConnection.h"
+#include "FFmpegDecoder.h"
 
 class EventController {
 public:
     EventQueue *queue;
     SDL_Thread *event_tid;
     SDL_Screen *screen;
+    FFmpegDecoder *decoder;
     SocketConnection *connection;
     SDL_bool stop;
 

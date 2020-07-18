@@ -48,8 +48,6 @@ SDL_bool FFmpegDecoder::init() {
         printf("Did not alloc AVCodecContext \n");
         return SDL_FALSE;
     }
-//    avcodec_parameters_to_context(codec_ctx, video_stream->codecpar);
-//    width=1080, height=1920
     codec_ctx->width = static_cast<int>(screen->screen_w);
     codec_ctx->height = static_cast<int>(screen->screen_h);
 
@@ -100,7 +98,7 @@ void FFmpegDecoder::_decode_loop() {
             break;
         }
 
-//        printf("av_read_frame success\n");
+       printf("av_read_frame success, w=%d, h=%d\n", codec_ctx->width, codec_ctx->height);
         while (1) {
             ret = avcodec_send_packet(codec_ctx, packet);
             if (ret == 0) {
@@ -148,6 +146,33 @@ void FFmpegDecoder::_decode_loop() {
     }
     quit:
     printf("break out_of_decode_loop");
+}
+
+SDL_bool FFmpegDecoder::resize(Size nSize) {
+    // 1. stop decode
+    AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_H264);
+    if (!codec) {
+        printf("resize Did not find a video codec \n");
+        return SDL_FALSE;
+    }
+    codec_ctx = avcodec_alloc_context3(codec);
+    if (!codec_ctx) {
+        printf("resize Did not alloc AVCodecContext \n");
+        return SDL_FALSE;
+    }
+    codec_ctx->width = static_cast<int>(nSize.width);
+    codec_ctx->height = static_cast<int>(nSize.height);
+
+    int ret = avcodec_open2(codec_ctx, codec, NULL);
+    if (ret < 0) {
+        printf("resize avcodec_open2 error:%s\n", av_err2str(ret));
+        return SDL_FALSE;
+    }
+    // 2. update new size
+    // 3. start new context to decode
+    this->latestSize = { nSize };
+
+    return SDL_TRUE;
 }
 
 void FFmpegDecoder::destroy() {
