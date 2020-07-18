@@ -12,7 +12,7 @@ link_directories(/usr/local/Cellar/sdl2/2.0.8/lib/)
 add_executable(AppRemote main.cpp SDL_Screen.cpp SDL_Screen.h SocketConnection.cpp SocketConnection.h FFmpegDecoder.cpp FFmpegDecoder.h FrameCache.cpp FrameCache.h EventCache.cpp EventCache.h EventController.cpp EventController.h)
 
 target_link_libraries(
-        APPREMOTE
+        AppRemote
         avcodec
         avdevice
         avfilter

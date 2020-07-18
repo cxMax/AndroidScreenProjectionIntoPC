@@ -29,7 +29,8 @@ int main() {
 
     int scale =2;
     char *name = "as_remote";
-    SDL_Screen *screen = new SDL_Screen(name, static_cast<int>(width / scale), static_cast<int>(height / scale));
+    // SDL_Screen *screen = new SDL_Screen(name, static_cast<int>(width / scale), static_cast<int>(height / scale));
+    SDL_Screen *screen = new SDL_Screen(name, static_cast<int>(width), static_cast<int>(height));
     screen->init();
     //开启编码器
     FrameCache *cache = new FrameCache();
