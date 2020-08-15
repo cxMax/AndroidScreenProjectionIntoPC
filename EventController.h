@@ -12,6 +12,14 @@
 #include "SocketConnection.h"
 #include "FFmpegDecoder.h"
 
+#define EVENT_UP 0
+#define EVENT_DOWN 1
+#define EVENT_SCROLL 2
+#define EVENT_KEY 3
+#define EVENT_RESIZE 4
+#define EVENT_CUSTOM 5
+#define EVENT_HOLD -1
+
 class EventController {
 public:
     EventQueue *queue;
@@ -43,6 +51,10 @@ public:
     void handleSDLKeyEvent(SDL_Screen *sc, SDL_KeyboardEvent *event);
 
     void handleScrollEvent(SDL_Screen *sc, SDL_MouseWheelEvent *event);
+
+    void handleMsg(SDL_Screen *sc, SDL_TextInputEvent *event);
+    void handleMotionEvent(SDL_Screen *sc, SDL_MouseMotionEvent *event);
+    void handleResize(SDL_Screen *sc, SDL_Event event);
 
 };
 

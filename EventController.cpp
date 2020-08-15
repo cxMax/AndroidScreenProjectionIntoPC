@@ -43,6 +43,7 @@ void EventController::destroy() {
 }
 
 
+bool mouseDown = false;
 void EventController::handleButtonEvent(SDL_Screen *screen, SDL_MouseButtonEvent *event) {
     int width = screen->screen_w;
     int height = screen->screen_h;
@@ -65,10 +66,12 @@ void EventController::handleButtonEvent(SDL_Screen *screen, SDL_MouseButtonEvent
     buf[0] = 0;
     if (event->type == SDL_MOUSEBUTTONDOWN) {
         //发送down 事件
-        buf[1] = 1;
+        buf[1] = EVENT_DOWN;
+        mouseDown = true;
     } else {
         // 发送UP事件
-        buf[1] = 0;
+        buf[1] = EVENT_UP;
+        mouseDown = false;
     }
     //高8位
     buf[2] = event->x >> 8;
@@ -238,6 +241,146 @@ void EventController::handleSDLKeyEvent(SDL_Screen *sc, SDL_KeyboardEvent *event
 
 }
 
+void EventController::handleMsg(SDL_Screen *sc, SDL_TextInputEvent *event) {
+    printf("event inputting \n");
+    char buf[4];
+    memset(buf, 0, sizeof(buf));
+    buf[0] = 1;
+    //自定义的案件事件
+    buf[1] = EVENT_CUSTOM;
+    buf[2] = EVENT_UP;
+    //key code back 键对应的是 4
+    buf[3] = 4;
+    // int result = connection->send_to_(reinterpret_cast<uint8_t *>(buf), 4);
+
+    int result = connection->send_to_(reinterpret_cast<u_int8_t *>(event->text), 3);
+    printf("send result = %d\n", result);
+}
+
+void EventController::handleMotionEvent(SDL_Screen *sc, SDL_MouseMotionEvent *event) {
+
+    //处理滑动事件
+    int x_c = event->x;
+    int y_c = event->y;
+    // int *x = &x_c;
+    // int *y = &y_c;
+    // SDL_GetMouseState(x, y);
+    // SDL_Rect viewport;
+    // float scale_x, scale_y;
+    // SDL_RenderGetViewport(sc->sdl_renderer, &viewport);
+    // SDL_RenderGetScale(sc->sdl_renderer, &scale_x, &scale_y);
+    // *x = (int) (*x / scale_x) - viewport.x;
+    // *y = (int) (*y / scale_y) - viewport.y;
+
+
+    int width = sc->screen_w;
+    int height = sc->screen_h;
+
+    //是否超过来边界
+    bool outside_device_screen = x_c < 0 || x_c >= width ||
+                                 y_c < 0 || y_c >= height;
+
+    if (outside_device_screen) {
+        printf("outside_device_screen");
+        // ignore
+        return;
+    }
+
+    SDL_assert_release(x_c >= 0 && x_c < 0x10000 && y_c >= 0 && y_c < 0x10000);
+
+    // int mul = event->which == SDL_MOUSEWHEEL_NORMAL ? 1 : -1;
+    int mul = -1;
+    int hs = -mul * event->xrel;
+    int vs = mul * event->yrel;
+
+    //记录鼠标移动时的坐标
+    int mouse_x = event->x;
+    int mouse_y = event->y;
+    if (mouseDown) {
+        //此处处理的是鼠标拖动情况
+        // printf("event move \n");
+        // printf("event move x=%d, y =%d, xrel=%d, yrel=%d \n", mouse_x, mouse_y, event->xrel, event->yrel);
+
+        char buf[14];
+        memset(buf, 0, sizeof(buf));
+        printf(" x_c =%d, y_c =%d, hs =%d, vs =%d\n", x_c, y_c, hs, vs);
+        buf[0] = 0;
+        //滚动事件
+        buf[1] = EVENT_SCROLL;
+        //高8位
+        buf[2] = x_c >> 8;
+        //低8位
+        buf[3] = x_c & 0xff;
+        //高8位
+        buf[4] = y_c >> 8;
+        //低8位
+        buf[5] = y_c & 0xff;
+
+        //继续滚动距离
+        // 24 -> 32
+        buf[6] = hs >> 24;
+        // 16 -> 23
+        buf[7] = hs >> 16;
+        // 8 -> 15
+        buf[8] = hs >> 8;
+        // 0 -> 7
+        buf[9] = hs;
+
+        // 24 -> 32
+        buf[10] = vs >> 24;
+        // 16 -> 23
+        buf[11] = vs >> 16;
+        // 8 -> 15
+        buf[12] = vs >> 8;
+        // 0 -> 7
+        buf[13] = vs;
+
+        int result = connection->send_to_(reinterpret_cast<uint8_t *>(buf), 14);
+        printf("event move result = %d\n", result);
+
+    } else {
+        //此时处理的是鼠标有可能放到滑动按钮上的情况
+        // printf("event move x=%d, y =%d, xrel=%d, yrel=%d \n", mouse_x, mouse_y, event->xrel, event->yrel);
+    }
+}
+
+/** for resize test */
+
+void EventController::handleResize(SDL_Screen *sc, SDL_Event event) {
+    if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+        int nWidth = event.window.data1;
+        int nHeight = event.window.data2;
+        printf("wtf resize event type w=%d h=%d\n", nWidth, nHeight);
+
+        Size size = {
+                nWidth & ~7,
+                nHeight & ~7,
+        };
+
+        char buf[6];
+        memset(buf, 0, sizeof(buf));
+        buf[0] = 0;
+        buf[1] = 4;
+
+        buf[2] = size.width >> 8;
+        buf[3] = size.width & 0xFF;
+
+        buf[4] = size.height >> 8;
+        buf[5] = size.height & 0xFF;
+        // int result = connection->send_to_(reinterpret_cast<uint8_t *>(buf), 4);
+        int result = connection->send_to_(reinterpret_cast<u_int8_t *>(buf), 6);
+        printf("send resize result = %d, w=%d, h=%d\n", result, size.width, size.height);
+        // decoder->stop();
+        // decoder->destroy();
+        // decoder->latestSize = { size };
+        // decoder->updateContext(size);
+
+        // printf("updated ? resize result = %d, w=%d, h=%d\n", result, decoder->latestSize.width, decoder->latestSize.height);
+        SDL_Delay(1000);
+        // decoder->async_start();
+    }
+}
+
 void EventController::event_handle() {
     printf("event_handle");
     for (;;) {
@@ -266,40 +409,12 @@ void EventController::event_handle() {
         } else if (event.type == SDL_MOUSEWHEEL) {
             //处理滑动事件
             handleScrollEvent(screen, &event.wheel);
-        } else if (event.type == SDL_WINDOWEVENT){
-            // printf("wtf event type %x\n", event.window.event);
-            if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                int nWidth = event.window.data1;
-                int nHeight = event.window.data2;
-                printf("wtf resize event type w=%d h=%d\n", nWidth, nHeight);
-
-                Size size = {
-                        nWidth & ~7,
-                        nHeight & ~7,
-                };
-
-                char buf[6];
-                memset(buf, 0, sizeof(buf));
-                buf[0] = 0;
-                buf[1] = 4;
-
-                buf[2] = size.width >> 8;
-                buf[3] = size.width & 0xFF;
-
-                buf[4] = size.height >> 8;
-                buf[5] = size.height & 0xFF;
-                // int result = connection->send_to_(reinterpret_cast<uint8_t *>(buf), 4);
-                int result = connection->send_to_(reinterpret_cast<u_int8_t *>(buf), 6);
-                printf("send resize result = %d, w=%d, h=%d\n", result, size.width, size.height);
-                // decoder->stop();
-                // decoder->destroy();
-                decoder->resize(size);
-                // decoder->latestSize = { size };
-                // decoder->updateContext(size);
-
-                printf("updated ? resize result = %d, w=%d, h=%d\n", result, decoder->latestSize.width, decoder->latestSize.height);
-                // decoder->async_start();
-            }
+        } else if (event.type == SDL_TEXTINPUT) {
+            handleMsg(screen, &event.text);
+        } else if (event.type == SDL_MOUSEMOTION) {
+            handleMotionEvent(screen, &event.motion);
+        } else if (event.type == SDL_WINDOWEVENT) {
+            handleResize(screen, event);
         }
     }
 
