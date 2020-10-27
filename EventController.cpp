@@ -173,15 +173,12 @@ void EventController::handleSDLKeyEvent(SDL_Screen *sc, SDL_KeyboardEvent *event
     int ctrl = event->keysym.mod & (KMOD_LCTRL | KMOD_RCTRL);
     int alt = event->keysym.mod & (KMOD_LALT | KMOD_RALT);
     int meta = event->keysym.mod & (KMOD_LGUI | KMOD_RGUI);
-    printf("ctrl = %d,", ctrl);
-    printf("meta = %d,", meta);
-    printf("alt = %d,\n", alt);
+    // printf("ctrl = %d, meta = %d, alt = %d\n", ctrl, meta, alt);
 
     //期望control+ H = home键 control+b = back键
     //再去取keycode
     SDL_Keycode keycode = event->keysym.sym;
-    printf("keycode = %d, action type = %d\n", keycode, event->type);
-    printf("b = %d, action type = %d\n", SDLK_b, event->type);
+    // printf("keycode = %d, action type = %d, b = %d, action type = %d\n\n", keycode, event->type, SDLK_b, event->type);
     if (event->type == SDL_KEYDOWN && ctrl != 0) {
         //这个时候发送的是按下的状态
         if (keycode == SDLK_h) {
@@ -335,6 +332,10 @@ void EventController::handleMotionEvent(SDL_Screen *sc, SDL_MouseMotionEvent *ev
         // 0 -> 7
         buf[13] = vs;
 
+        // x_c =756, y_c =1779, hs =-42, vs =0
+        // -1 -1 -1 -42
+        // x=756, y=1779, hs=-1, vs=0
+
         int result = connection->send_to_(reinterpret_cast<uint8_t *>(buf), 14);
         printf("event move result = %d\n", result);
 
@@ -381,6 +382,58 @@ void EventController::handleResize(SDL_Screen *sc, SDL_Event event) {
     }
 }
 
+void EventController::handleBitmap(SDL_Screen *scr, SDL_Event event) {
+    printf("发送 bitmap 指令 ----> \n");
+    // char buf2[6];
+    char buf2[3];
+    int aa[10];
+
+    char buf3[] = "0.35F,82";
+
+    memset(buf2, 0, sizeof(buf2));
+    // buf2[0] = 0;
+    // buf2[1] = 5;
+    // buf2[0] = 0;
+    buf2[0] = 21;
+    int l = sizeof(buf3);
+    buf2[2] = l & 0xff;
+    buf2[1] = (l >> 8) & 0xff;
+    // buf2[1] = 0;
+    // buf2[2] = 0;
+    // buf2[3] = 20;
+
+    // int result = connection->send_to_(reinterpret_cast<uint8_t *>(buf), 6);
+    int result = connection->send_to_(reinterpret_cast<uint8_t *>(buf2), 3);
+    result = connection->send_to_(reinterpret_cast<uint8_t *>(buf3), sizeof(buf3)/ sizeof(char));
+}
+
+char aaa = 0;
+void EventController::handleBitmap2(SDL_Screen *scr, SDL_Event event) {
+    printf("发送 bitmap 指令 handleBitmap2 ----> \n");
+    // char buf2[6];
+    char buf2[3];
+    int aa[10];
+
+    char buf3[] = "0.35F,82";
+
+    memset(buf2, 0, sizeof(buf2));
+    // buf2[0] = 0;
+    // buf2[1] = 5;
+    // buf2[0] = 0;
+    // buf2[0] = 21;
+    // int l = sizeof(buf3);
+    // buf2[2] = l & 0xff;
+    // buf2[1] = (l >> 8) & 0xff;
+
+    buf2[0] = 30;
+    buf2[1] = 0;
+    buf2[2] = (aaa++);
+
+    // int result = connection->send_to_(reinterpret_cast<uint8_t *>(buf), 6);
+    int result = connection->send_to_(reinterpret_cast<uint8_t *>(buf2), 3);
+    // result = connection->send_to_(reinterpret_cast<uint8_t *>(buf3), sizeof(buf3)/ sizeof(char));
+}
+
 void EventController::event_handle() {
     printf("event_handle");
     for (;;) {
@@ -410,11 +463,14 @@ void EventController::event_handle() {
             //处理滑动事件
             handleScrollEvent(screen, &event.wheel);
         } else if (event.type == SDL_TEXTINPUT) {
-            handleMsg(screen, &event.text);
+            // handleMsg(screen, &event.text);
+            // handleBitmap(screen, event);
+            handleBitmap2(screen, event);
         } else if (event.type == SDL_MOUSEMOTION) {
             handleMotionEvent(screen, &event.motion);
         } else if (event.type == SDL_WINDOWEVENT) {
-            handleResize(screen, event);
+            // TODO, resize
+            // handleResize(screen, event);
         }
     }
 

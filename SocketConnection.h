@@ -20,7 +20,7 @@ public:
     /**
      * 连接Socket
      */
-    SDL_bool connect_server();
+    SDL_bool connect_server(int port);
 
     /**
      * 关闭Socket
@@ -36,6 +36,8 @@ public:
      * Socket 接受
      */
     int recv_from_(uint8_t *buf, int len);
+    int recv_from_(char *buf, int len);
+    int read_from_(uint8_t *buf, int len);
 };
 
 

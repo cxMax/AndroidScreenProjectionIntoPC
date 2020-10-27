@@ -25,7 +25,6 @@ public:
     EventQueue *queue;
     SDL_Thread *event_tid;
     SDL_Screen *screen;
-    FFmpegDecoder *decoder;
     SocketConnection *connection;
     SDL_bool stop;
 
@@ -55,6 +54,8 @@ public:
     void handleMsg(SDL_Screen *sc, SDL_TextInputEvent *event);
     void handleMotionEvent(SDL_Screen *sc, SDL_MouseMotionEvent *event);
     void handleResize(SDL_Screen *sc, SDL_Event event);
+    void handleBitmap(SDL_Screen *sc, SDL_Event event);
+    void handleBitmap2(SDL_Screen *sc, SDL_Event event);
 
 };
 

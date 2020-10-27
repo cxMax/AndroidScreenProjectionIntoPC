@@ -5,7 +5,7 @@
 #include <SDL2/SDL_stdinc.h>
 #include "SocketConnection.h"
 
-SDL_bool SocketConnection::connect_server() {
+SDL_bool SocketConnection::connect_server(int port) {
     //创建Socket
     client_conn = socket(PF_INET, SOCK_STREAM, 0);
     if (!client_conn) {
@@ -16,7 +16,7 @@ SDL_bool SocketConnection::connect_server() {
     struct sockaddr_in in_addr;
     memset(&in_addr, 0, sizeof(sockaddr_in));
 
-    in_addr.sin_port = htons(9000);
+    in_addr.sin_port = htons(port);
     in_addr.sin_family = AF_INET;
     in_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     int ret = connect(client_conn, (struct sockaddr *) &in_addr, sizeof(struct sockaddr));
@@ -48,4 +48,20 @@ int SocketConnection::recv_from_(uint8_t *buf, int len) {
     }
     //rev 和 read 的区别 https://blog.csdn.net/superbfly/article/details/72782264
     return recv(client_conn, buf, len, 0);
+}
+
+int SocketConnection::recv_from_(char *buf, int len) {
+    if (!client_conn) {
+        return 0;
+    }
+    //rev 和 read 的区别 https://blog.csdn.net/superbfly/article/details/72782264
+    return recv(client_conn, buf, len, 0);
+}
+
+int SocketConnection::read_from_(uint8_t *buf, int len) {
+    if (!client_conn) {
+        return 0;
+    }
+    //rev 和 read 的区别 https://blog.csdn.net/superbfly/article/details/72782264
+    return read(client_conn, buf, len);
 }

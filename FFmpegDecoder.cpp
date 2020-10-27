@@ -98,7 +98,7 @@ void FFmpegDecoder::_decode_loop() {
             break;
         }
 
-       printf("av_read_frame success, w=%d, h=%d\n", codec_ctx->width, codec_ctx->height);
+       // printf("av_read_frame success, w=%d, h=%d\n", codec_ctx->width, codec_ctx->height);
         while (1) {
             ret = avcodec_send_packet(codec_ctx, packet);
             if (ret == 0) {
